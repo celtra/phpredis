@@ -1875,10 +1875,18 @@ PHP_REDIS_API int redis_sock_connect(RedisSock *redis_sock)
         tv_ptr = &tv;
     }
 
+    php_stream_context *context = php_stream_context_alloc();
+
+    zval verify_peer_zval;
+    ZVAL_BOOL(&verify_peer_zval, 0);
+
+    php_stream_context_set_option(context, "ssl", "verify_peer", &verify_peer_zval);
+    php_stream_context_set_option(context, "ssl", "verify_peer_name", &verify_peer_zval);
+
     redis_sock->stream = php_stream_xport_create(host, host_len,
         0, STREAM_XPORT_CLIENT | STREAM_XPORT_CONNECT,
         persistent_id ? ZSTR_VAL(persistent_id) : NULL,
-        tv_ptr, NULL, &estr, &err);
+        tv_ptr, context, &estr, &err);
 
     if (persistent_id) {
         zend_string_release(persistent_id);
